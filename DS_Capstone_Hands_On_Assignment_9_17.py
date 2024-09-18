@@ -3,15 +3,28 @@ from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
 import torch
 from huggingface_hub import login
 
+import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
+
+
+client_id = os.getenv('CLIENT_ID')
+client_secret = os.getenv('CLIENT_SECRET')
+user_agent = os.getenv('USER_AGENT')
+token = os.getenv("HUGGING_FACE_TOKEN")
+
+
 # Log in to Hugging Face using your token
-login("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")
+login(token)
 
 
 # Create Reddit instance with your credentials
 reddit = praw.Reddit(
-    client_id='tBXQcLgc2VTa6UP8jNBQjA',
-    client_secret='sIXavD_1P9rsTswwgniOham95eLWMw',
-    user_agent='python:diabetes_data_analysis:v1.0 (by /u/Specific-Chocolate65)'
+    client_id=client_id,
+    client_secret=client_secret,
+    user_agent=user_agent
 )
 
 # Load the LLaMA 2 7B Chat model and tokenizer from Hugging Face
