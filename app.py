@@ -16,7 +16,7 @@ mongo_uri = os.getenv('MONGO_DB_CONN_URL')
 model = load_model('final_deep_learning_model.h5')
 
 # Assuming you saved the scaler used during training
-scaler = StandardScaler()
+# scaler = StandardScaler()
 
 # Collect user inputs for fine-tuned features (15 features)
 pregnancies = st.number_input("How many pregnancies have you had in total?", min_value=0, value=0)
@@ -94,13 +94,13 @@ if st.button("Submit"):
                                      bp_level_normal]])
             
             # **Scale the features** before making the prediction
-            fine_tuned_features_scaled = scaler.transform(fine_tuned_features)
+            # fine_tuned_features_scaled = scaler.transform(fine_tuned_features)
             # **Scale the time series data**
-            time_series_values_scaled = scaler.transform(time_series_values.reshape(-1, 6)).reshape(1, 10, 6)
+            # time_series_values_scaled = scaler.transform(time_series_values.reshape(-1, 6)).reshape(1, 10, 6)
 
 
             # Make the prediction
-            prediction = model.predict([time_series_values_scaled, fine_tuned_features_scaled])
+            prediction = model.predict([time_series_values, fine_tuned_features])
             # Get the index of the highest value in the prediction array (0, 1, 2, or 3)
             predicted_class = np.argmax(prediction)
 
