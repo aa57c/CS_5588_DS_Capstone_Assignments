@@ -1,14 +1,36 @@
 import streamlit as st
 import numpy as np
 from pymongo import MongoClient
-from keras.models import load_model
+from keras.models import load_model # type: ignore
+from sklearn.preprocessing import StandardScaler
+
+from dotenv import load_dotenv
+import os
+
+# Load environment variables from .env file
+load_dotenv()
+
+mongo_uri = os.getenv('MONGO_DB_CONN_URL')
 
 # Load your combined model
 model = load_model('final_deep_learning_model.h5')
 
+# Assuming you saved the scaler used during training
+scaler = StandardScaler()
+
 # Collect user inputs for fine-tuned features (15 features)
 pregnancies = st.number_input("How many pregnancies have you had in total?", min_value=0, value=0)
-bmi = st.number_input("Enter your BMI", value=0.0)
+# Collect user input for height and weight
+height_in = st.number_input("Enter your height (in inches):", min_value=0.0, value=0.0)
+weight_lb = st.number_input("Enter your weight (in pounds):", min_value=0.0, value=0.0)
+
+# Calculate BMI
+if height_in > 0 and weight_lb > 0:
+    bmi = (weight_lb * 703) / (height_in ** 2)
+    st.write(f"Your calculated BMI is: {bmi:.2f}")
+else:
+    st.write("Please enter valid height and weight to calculate BMI.")
+
 sound_sleep = st.number_input("How many hours of sleep were you still in bed (sound sleep)?", value=0.0)
 sleep = st.number_input("Enter total sleep on average per day in hours", value=0.0)
 
@@ -70,9 +92,15 @@ if st.button("Submit"):
                                      physically_active_less_than_half_hr, physically_active_none, 
                                      family_diabetes_no, bp_level_high, high_bp_no, high_bp_yes, 
                                      bp_level_normal]])
+            
+            # **Scale the features** before making the prediction
+            fine_tuned_features_scaled = scaler.transform(fine_tuned_features)
+            # **Scale the time series data**
+            time_series_values_scaled = scaler.transform(time_series_values.reshape(-1, 6)).reshape(1, 10, 6)
+
 
             # Make the prediction
-            prediction = model.predict([time_series_values, fine_tuned_features])
+            prediction = model.predict([time_series_values_scaled, fine_tuned_features_scaled])
             # Get the index of the highest value in the prediction array (0, 1, 2, or 3)
             predicted_class = np.argmax(prediction)
 
@@ -91,7 +119,7 @@ if st.button("Submit"):
             st.write("Diagnosis:", diagnosis)
 
             # Upload the prediction to MongoDB
-            client = MongoClient("mongodb+srv://aa57c:admin@cluster0.yhab1.mongodb.net/")
+            client = MongoClient(mongo_uri)
             db = client['diabetes_data']
             collection = db['predictions']
             collection.insert_one({
